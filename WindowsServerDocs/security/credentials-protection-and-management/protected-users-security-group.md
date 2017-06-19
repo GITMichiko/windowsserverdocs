@@ -25,9 +25,9 @@ This topic for the IT professional describes the Active Directory security group
 This security group is designed as part of a strategy to effectively protect and manage credentials within the enterprise. Members of this group automatically have non-configurable protections applied to their accounts. Membership in the Protected Users group is meant to be restrictive and proactively secure by default. The only method to modify these protections for an account is to remove the account from the security group.
 
 > [!WARNING]
-> Accounts for services and computers should not be members of the Protected Users group. This group provides no local protection because the password or certificate is always available on the host. Authentication will fail with the error ???the user name or password is incorrect??? for any service or computer that is added to the Protected Users group.
+> Accounts for services and computers should not be members of the Protected Users group. This group provides no local protection because the password or certificate is always available on the host for the service or host. Authentication will fail with the error "the user name or password is incorrect" for any service or computer that is added to the Protected Users group.
 
-This domain-related, global group triggers non-configurable protection on devices and host computers running  Windows Server 2012 R2  and Windows 8.1, and on domain controllers in domains with a primary domain controller running  Windows Server 2012 R2 . This greatly reduces the memory footprint of credentials when users sign in to computers on the network from a non-compromised computer.
+This domain-related, global group triggers non-configurable protection on devices and host computers running  Windows Server 2012 R2  and Windows 8.1, and on domain controllers in domains with a primary domain controller running  Windows Server 2012 R2. This greatly reduces the memory footprint of credentials when users sign in to computers on the network from a non-compromised computer.
 
 Depending on the account's domain functional level, members of the Protected Users group are further protected due to behavior changes in the authentication methods that are supported in Windows.
 
@@ -58,13 +58,13 @@ The following table specifies the properties of the Protected Users group.
 ### <a name="BKMK_HowItWorks"></a>How the Protected Users group works
 This section explains how the Protected Users group works when:
 
--   Windows 8.1 devices are connecting to  Windows Server 2012 R2  hosts.
+-   A user signs in a Windows devices which supports Protected User group client-side protections.
 
--   The account is located at the  Windows Server 2012 R2  domain functional level.
+-   The user belongs to a Windows Server 2012 R2 domain functional level domain.
 
-**When Windows 8.1 devices are connecting to  Windows Server 2012 R2  hosts**
+**Protected User group client-side protections**
 
-When the Protected Users??? group account is upgraded to the  Windows Server 2012 R2  domain functional level, domain controller-based protections are automatically applied. Members of the Protected Users group who authenticate to a  Windows Server 2012 R2  domain can no longer authenticate by using:
+When a user signs in a Windows device which supports Protected User group client-side protections and they are a member for the Protected users group, client-side protections are automatically applied. Members of the Protected Users group can no longer authenticate by using:
 
 -   Default credential delegation (CredSSP). Plain text credentials are not cached even when the **Allow delegating default credentials** Group Policy setting is enabled.
 
@@ -72,23 +72,21 @@ When the Protected Users??? group account is upgraded to the  Windows Server 201
 
 -   NTLM. The result of the NT one-way function, NTOWF, is not cached.
 
--   Kerberos long-term keys. The keys from Kerberos initial TGT requests are typically cached so the authentication requests are not interrupted. For accounts in this group, Kerberos protocol verifies authentication at each request..
+-   Kerberos DES or RC4 keys. Only AES Kerberos long term keys are created from a password sign in. The Kerberos initial TGT is cached to provide SSO, however the Kerberos long term keys are not cached after the initial TGT is recieved. So each request for an intial TGT requires the user to provide credentials.
 
 -   Sign-in offline. A cached verifier is not created at sign-in.
 
-Non-configurable settings to the TGTs expiration are established for every account in the Protected Users group. Normally, the domain controller sets the TGTs lifetime and renewal, based on the domain policies, **Maximum lifetime for user ticket** and **Maximum lifetime for user ticket renewal**. For the Protected Users group, 600 minutes is set for these domain policies.
-
 After the user account is added to the Protected Users group, protection is already in place when the user signs in to the domain.
 
-**When domain controllers other than  Windows Server 2012 R2  require the Protected Users security group**
+**Enabling Protected Users security group with domain controllers earlier than  Windows Server 2012 R2**
 
-The Protected Users group can be applied to domain controllers that run an operating system earlier than  Windows Server 2012 R2 . This allows the added security that is achieved by using the Protected Users group to be applied to all domain controllers. The Protected Users group can be created by  HYPERLINK "http://technet.microsoft.com/library/cc816944(v=ws.10).aspx" transferring the primary domain controller (PDC) emulator role to a domain controller that runs Windows Server 2012 R2. After that group object is replicated to other domain controllers, the PDC emulator role can be hosted on a domain controller that runs an earlier version of Windows Server.
+The Protected Users group can be applied to domain controllers that run an operating system earlier than  Windows Server 2012 R2 . This allows the added security that is achieved by using the Protected Users group to be applied to Windows devices that support the client-side protections even without upgrading the DFL. The Protected Users group can be created by  HYPERLINK "http://technet.microsoft.com/library/cc816944(v=ws.10).aspx" transferring the primary domain controller (PDC) emulator role to a domain controller that runs Windows Server 2012 R2. After that group object is replicated to other domain controllers, the PDC emulator role can be hosted on a domain controller that runs an earlier version of Windows Server.
 
 For more information, see [How to Configure Protected Accounts](how-to-configure-protected-accounts.md).
 
-**Built in restrictions of the Protected Users security group**
+**Protected Users group Domain Controller protections**
 
-Accounts that are members of the Protected Users group that authenticate to a  Windows Server 2012 R2  domain are unable to:
+Accounts that are members of the Protected Users group that authenticate to a Windows Server 2012 R2 domain are unable to:
 
 -   Authenticate with NTLM authentication.
 
@@ -96,7 +94,9 @@ Accounts that are members of the Protected Users group that authenticate to a  W
 
 -   Be delegated with unconstrained or constrained delegation.
 
--   Renew the Kerberos TGTs beyond the initial four-hour lifetime.
+-   Renew the Kerberos TGTs beyond the initial four-hour lifetime.
+
+Non-configurable settings to the TGTs expiration are established for every account in the Protected Users group. Normally, the domain controller sets the TGTs lifetime and renewal, based on the domain policies, **Maximum lifetime for user ticket** and **Maximum lifetime for user ticket renewal**. For the Protected Users group, 600 minutes is set for these domain policies.
 
 > [!WARNING]
 > Accounts for services and computers should not be members of the Protected Users group. This group provides no local protection because the password or certificate is always available on the host.
